@@ -1,0 +1,50 @@
+COPY data_access ( dnombre,tnacionalidad,ccedula  )  TO 'D:\table.tvs'  WITH  DELIMITER AS  ',';
+
+COPY personal ( nombres,nacionalidad,cedula  )  FROM 'D:\table.tvs'  WITH  DELIMITER AS  ',';
+
+COPY data_access ( ccedula,ccargo,dcargo,cdependencia  )  TO 'D:\table.tvs'  WITH  DELIMITER AS  ',';
+
+COPY cargo ( cedula,codigo,dcargo,cdependencia  )  FROM 'D:\table.tvs'  WITH  DELIMITER AS  ',';
+
+COPY data_access ( ccedula,cdependencia,cdependencia  )  TO 'D:\table.tvs'  WITH  DELIMITER AS  ',';
+
+COPY dependencia ( cedula,cdependencia,cdependencia  )  FROM 'D:\table.tvs'  WITH  DELIMITER AS  ',';
+
+SELECT ccedula, COUNT(*) AS c
+FROM data_access
+GROUP BY ccedula
+HAVING COUNT(*) > 1
+    
+
+
+DELETE FROM data_access
+WHERE nconsecutivop NOT IN
+(SELECT MIN(nconsecutivop)
+FROM data_access
+GROUP BY ccedula
+HAVING COUNT(*) >= 1)
+
+
+
+DELETE FROM data_access
+WHERE ccedula IN
+(SELECT ccedula
+FROM data_access
+GROUP BY ccedula
+HAVING COUNT(*) > 1)
+
+3910818 = CEDULA CON DOS CARGOS EN INSTITUCIONES DIFERENTES
+
+
+
+UPDATE
+    datos_bancarios as db
+SET
+    id_banco = b.id_banco
+FROM
+    banco as b
+INNER JOIN
+    tabla_ayuda as t
+ON
+    t.nombre_banco = b.nombre
+WHERE db.cedula = t.cedula

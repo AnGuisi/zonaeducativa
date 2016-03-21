@@ -1,0 +1,85 @@
+CREATE ROLE administrador ENCRYPTED PASSWORD '12345' SUPERUSER NOINHERIT CREATEDB CREATEROLE REPLICATION;
+
+CREATE ROLE administrador2 ENCRYPTED PASSWORD '12345' NOSUPERUSER NOINHERIT CREATEDB CREATEROLE REPLICATION;
+
+CREATE ROLE jefedep NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE;
+
+CREATE ROLE usercomun NOSUPERUSER NOINHERIT NOCREATEDB NOCREATEROLE;
+
+CREATE ROLE user1 LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE;
+GRANT usercomun TO user1;
+
+CREATE ROLE userAdmin LOGIN NOSUPERUSER INHERIT CREATEDB CREATEROLE;
+GRANT administrador2 to userAdmin;
+
+REVOKE CONNECT ON DATABASE zonaeducativa FROM PUBLIC;
+
+GRANT CONNECT ON DATABASE zonaeducativa TO administrador;
+
+GRANT CONNECT ON DATABASE zonaeducativa TO administrador2;
+
+GRANT CONNECT ON DATABASE zonaeducativa TO jefedep;
+
+GRANT CONNECT ON DATABASE zonaeducativa TO usercomun;
+
+GRANT USAGE ON SCHEMA public TO administrador;
+
+GRANT USAGE ON SCHEMA public TO administrador2;
+
+GRANT USAGE ON SCHEMA public TO jefedep;
+
+GRANT USAGE ON SCHEMA public TO usercomun;
+
+CREATE OR REPLACE FUNCTION grant_all_privileges(p_user text, p_schema text)
+RETURNS void AS
+$BODY$
+DECLARE
+   objeto text;
+BEGIN
+   FOR objeto IN 
+      SELECT tablename FROM pg_tables WHERE schemaname = p_schema 
+      UNION
+      SELECT relname FROM pg_statio_all_sequences WHERE schemaname =
+p_schema
+   LOOP
+ 
+      EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' || p_schema || '.' || objeto || '
+TO ' || p_user ;
+   END LOOP;
+ 
+END;
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+
+SELECT grant_all_privileges('administrador', 'public');
+SELECT grant_all_privileges('administrador2', 'public');
+SELECT grant_all_privileges('jefedep', 'public');
+SELECT grant_all_privileges('usercomun', 'public');
+
+
+CREATE OR REPLACE FUNCTION revoke_delete(p_user text, p_schema text)
+RETURNS void AS
+$BODY$
+DECLARE
+   objeto text;
+BEGIN
+   FOR objeto IN 
+      SELECT tablename FROM pg_tables WHERE schemaname = p_schema 
+      UNION
+      SELECT relname FROM pg_statio_all_sequences WHERE schemaname =
+p_schema
+   LOOP
+ 
+      EXECUTE 'REVOKE DELETE ON ' || p_schema || '.' || objeto || '
+FROM ' || p_user ;
+   END LOOP;
+ 
+END;
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+
+SELECT revoke_delete('usercomun', 'public');
+
+REVOKE ALL PRIVILEGES ON usuario FROM usercomun;
+
+

@@ -1,0 +1,1 @@
+SELECT p.cedula,d.cdependencia, d.ddependencia, c.codigo, c.dcargo FROM personal as p INNER JOIN ayuda_table as at ON p.cedula = at.cedula INNER JOIN dependencia as d ON d.cdependencia = at.cdependencia INNER JOIN cargo as c ON c.cedula = p.cedula WHERE
